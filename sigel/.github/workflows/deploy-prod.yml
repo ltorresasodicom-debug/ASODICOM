@@ -1,0 +1,30 @@
+name: Deploy — Production
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://sigel.gob.ec
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-kubectl@v4
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG_PROD }}" | base64 -d > ~/.kube/config
+      - name: Apply manifests (production overlay)
+        run: kubectl apply -k sigel/infra/k8s/overlays/prod
+      - name: Verify rollout
+        run: |
+          kubectl -n sigel rollout status deploy/gateway --timeout=600s
+          kubectl -n sigel rollout status deploy/analytics --timeout=600s
+          kubectl -n sigel rollout status deploy/web --timeout=600s
+      - name: Smoke test
+        run: |
+          curl -fsSL https://sigel.gob.ec/api/v1/scoring/estadisticas | jq .

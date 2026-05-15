@@ -1,0 +1,39 @@
+                    GNU AFFERO GENERAL PUBLIC LICENSE
+                       Version 3, 19 November 2007
+
+ Copyright (C) 2025 SIGEL Ecuador
+ Permitida la copia y distribución de copias literales de este documento
+ de licencia, pero está prohibido modificarlo.
+
+                            Preámbulo
+
+  La Licencia Pública General Affero GNU es una licencia copyleft, libre y
+gratuita para software y otros tipos de obras, específicamente diseñada
+para asegurar la cooperación con la comunidad en el caso del software de
+servidor de red.
+
+  Las licencias para la mayoría del software y otras obras prácticas están
+diseñadas para retirar tu libertad de compartir y cambiar las obras. Por
+contraste, nuestras Licencias Públicas Generales pretenden garantizar tu
+libertad de compartir y cambiar todas las versiones de un programa — para
+asegurarse de que permanece como software libre para todos sus usuarios.
+
+  Cuando hablamos de software libre, nos referimos a la libertad, no al
+precio. Nuestras Licencias Públicas Generales están diseñadas para
+asegurar que tengas la libertad de distribuir copias de software libre
+(y cobrar por ello si lo deseas), que recibas código fuente o puedas
+obtenerlo si lo deseas, que puedas modificar el software o utilizar
+partes de él en nuevos programas libres, y que sepas que puedes hacer
+estas cosas.
+
+  El término "AGPL" se refiere a la Licencia Pública General Affero GNU
+versión 3. El texto completo se encuentra en:
+
+    https://www.gnu.org/licenses/agpl-3.0.html
+
+  Toda obra derivada de este código debe distribuirse bajo los mismos
+términos. Si modifica este software y lo expone como un servicio de red
+(por ejemplo, una aplicación web o una API pública), debe poner el código
+fuente modificado a disposición de los usuarios del servicio.
+
+                       FIN DE LOS TÉRMINOS Y CONDICIONES

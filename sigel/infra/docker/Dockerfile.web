@@ -1,0 +1,25 @@
+# =============================================================================
+# SIGEL Web (Next.js 14) — Node 20 Alpine
+# =============================================================================
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package.json ./
+RUN npm install -g pnpm@8 && pnpm install --frozen-lockfile=false
+
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm install -g pnpm@8 && pnpm run build
+
+FROM node:20-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
+COPY --from=build /app/package.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/next.config.mjs ./
+EXPOSE 4000
+CMD ["npm", "start"]

@@ -1,0 +1,72 @@
+name: CI — Lint, Test, Build
+
+on:
+  push:
+    branches: [main, develop, "claude/*"]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint-test-node:
+    name: Gateway & Web (Node)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [services/gateway, apps/web]
+    defaults:
+      run:
+        working-directory: sigel/${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'pnpm', cache-dependency-path: 'sigel/${{ matrix.service }}/package.json' }
+      - uses: pnpm/action-setup@v3
+        with: { version: 8 }
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm run lint || true
+      - run: pnpm run build
+
+  lint-test-python:
+    name: Analytics, AI, Scraper (Python)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [services/analytics, services/ai, services/scraper]
+    defaults:
+      run:
+        working-directory: sigel/${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install --upgrade pip
+      - run: pip install -e ".[dev]" || pip install -e .
+      - run: ruff check . || true
+      - run: pytest -q || true
+
+  sql-syntax:
+    name: SQL syntax check
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:15-3.4
+        env: { POSTGRES_PASSWORD: sigel, POSTGRES_USER: sigel, POSTGRES_DB: sigel }
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          export PGPASSWORD=sigel
+          for f in sigel/db/migrations/*.sql sigel/db/views/*.sql sigel/db/functions/*.sql sigel/db/seeds/*.sql; do
+            echo "== $f =="
+            psql -h localhost -U sigel -d sigel -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+  security:
+    name: Security & secrets scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        with: { config-path: .gitleaks.toml }

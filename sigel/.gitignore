@@ -1,0 +1,82 @@
+# =============================================================================
+# SIGEL — .gitignore
+# =============================================================================
+
+# Node
+node_modules/
+dist/
+.next/
+out/
+coverage/
+*.log
+npm-debug.log*
+yarn-debug.log*
+.pnpm-store/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual envs
+.venv/
+venv/
+env/
+ENV/
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Models / data
+*.joblib
+*.pkl
+*.h5
+/data/
+data/models/
+
+# Docker
+*.pid
+
+# Scrapy
+.scrapy/
+
+# Generated
+schema.gql
+*.tsbuildinfo
+next-env.d.ts
