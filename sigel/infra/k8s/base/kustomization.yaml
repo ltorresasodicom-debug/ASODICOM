@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sigel
+commonLabels:
+  app.kubernetes.io/part-of: sigel
+  app.kubernetes.io/managed-by: kustomize
+resources:
+  - namespace.yaml
+  - postgres/statefulset.yaml
+  - postgres/service.yaml
+  - redis/deployment.yaml
+  - redis/service.yaml
+  - mongo/statefulset.yaml
+  - mongo/service.yaml
+  - gateway/deployment.yaml
+  - gateway/service.yaml
+  - gateway/hpa.yaml
+  - analytics/deployment.yaml
+  - analytics/service.yaml
+  - analytics/hpa.yaml
+  - ai/deployment.yaml
+  - ai/service.yaml
+  - web/deployment.yaml
+  - web/service.yaml
+  - scraper/cronjob.yaml
+  - nginx/ingress.yaml

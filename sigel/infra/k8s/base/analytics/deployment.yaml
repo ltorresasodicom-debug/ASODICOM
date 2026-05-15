@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: analytics, namespace: sigel }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: analytics } }
+  template:
+    metadata:
+      labels: { app: analytics }
+      annotations: { prometheus.io/scrape: "true", prometheus.io/port: "8000" }
+    spec:
+      containers:
+        - name: analytics
+          image: ghcr.io/sigel-ec/analytics:latest
+          ports: [{ containerPort: 8000 }]
+          env:
+            - { name: DB_HOST, value: postgres }
+            - { name: REDIS_URL, value: redis://redis:6379/0 }
+            - name: DB_USER
+              valueFrom: { secretKeyRef: { name: postgres-secret, key: user } }
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: postgres-secret, key: password } }
+          resources:
+            requests: { cpu: 250m, memory: 1Gi }
+            limits:   { cpu: 2000m, memory: 4Gi }
+          volumeMounts:
+            - { name: models, mountPath: /data/models }
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 30
+      volumes:
+        - name: models
+          persistentVolumeClaim: { claimName: analytics-models }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: analytics-models, namespace: sigel }
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: { requests: { storage: 10Gi } }

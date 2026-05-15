@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'sigel-gateway'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['gateway:3000']
+
+  - job_name: 'sigel-analytics'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['analytics:8000']
+
+  - job_name: 'sigel-ai'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['ai:8001']
+
+  - job_name: 'sigel-postgres'
+    static_configs:
+      - targets: ['postgres:5432']

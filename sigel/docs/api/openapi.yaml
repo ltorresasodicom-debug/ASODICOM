@@ -1,0 +1,184 @@
+openapi: 3.1.0
+info:
+  title: SIGEL API
+  version: 1.0.0
+  description: |
+    Sistema Integral de Gestión y Evaluación Local. API REST oficial.
+    Implementa el modelo metodológico SIGEL (8 dimensiones, INGEL).
+  contact:
+    name: SIGEL Ecuador
+    url: https://sigel.gob.ec
+    email: soporte@sigel.gob.ec
+  license:
+    name: AGPL-3.0-or-later
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+
+servers:
+  - url: https://sigel.gob.ec/api/v1
+    description: Producción
+  - url: http://localhost:3000/api/v1
+    description: Local
+
+tags:
+  - name: auth
+  - name: territorios
+  - name: autoridades
+  - name: indicadores
+  - name: scoring
+  - name: encuestas
+  - name: denuncias
+  - name: alertas
+
+paths:
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Registro de ciudadano
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+                nombre: { type: string }
+      responses:
+        '201': { description: Creado }
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login con email/password (MFA opcional)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                password: { type: string }
+                mfaToken: { type: string, nullable: true }
+
+  /scoring/ranking/nacional:
+    get:
+      tags: [scoring]
+      summary: Ranking nacional INGEL
+      parameters:
+        - { in: query, name: limit, schema: { type: integer, default: 50 } }
+        - { in: query, name: offset, schema: { type: integer, default: 0 } }
+      responses:
+        '200':
+          description: Array de GADs ordenados por INGEL descendente
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ScoringRanking' }
+
+  /scoring/gad/{id}:
+    get:
+      tags: [scoring]
+      summary: Scoring vigente de un GAD
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+
+  /scoring/gad/{id}/evolucion:
+    get:
+      tags: [scoring]
+      summary: Serie temporal del INGEL para un GAD
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+
+  /territorios/provincias:
+    get:
+      tags: [territorios]
+      summary: 24 provincias del Ecuador
+
+  /territorios/cantones:
+    get:
+      tags: [territorios]
+      summary: 218 cantones (filtrable)
+      parameters:
+        - { in: query, name: provinciaId, schema: { type: integer } }
+
+  /autoridades:
+    get:
+      tags: [autoridades]
+      summary: Lista paginada de autoridades
+      parameters:
+        - in: query
+          name: cargo
+          schema: { type: string, enum: [ALCALDE, PREFECTO, ASAMBLEISTA] }
+
+  /encuestas/responder:
+    post:
+      tags: [encuestas]
+      summary: Registrar respuesta ciudadana (Likert 1-5)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [encuestaId, gadId]
+              properties:
+                encuestaId: { type: integer }
+                gadId: { type: integer }
+                confianza:    { type: integer, minimum: 1, maximum: 5 }
+                transparencia:{ type: integer, minimum: 1, maximum: 5 }
+                satisfaccion: { type: integer, minimum: 1, maximum: 5 }
+                participacion:{ type: integer, minimum: 1, maximum: 5 }
+                corrupcion:   { type: integer, minimum: 1, maximum: 5 }
+                servicios:    { type: integer, minimum: 1, maximum: 5 }
+
+  /denuncias:
+    post:
+      tags: [denuncias]
+      summary: Crear denuncia (puede ser anónima)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [gadId, tipo, asunto, descripcion]
+              properties:
+                gadId: { type: integer }
+                tipo:
+                  type: string
+                  enum: [CORRUPCION, OPACIDAD, MAL_SERVICIO, ABUSO,
+                         NEGLIGENCIA, OBRA_INCONCLUSA, MALA_GESTION, OTRO]
+                asunto: { type: string, maxLength: 300 }
+                descripcion: { type: string }
+                anonima: { type: boolean, default: false }
+
+  /alertas:
+    get:
+      tags: [alertas]
+      summary: Alertas activas
+      parameters:
+        - { in: query, name: nivel, schema: { type: string, enum: [CRITICO, ALTO, MEDIO, BAJO] } }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ScoringRanking:
+      type: object
+      properties:
+        posicion: { type: integer }
+        gad_id: { type: integer }
+        gad_nombre: { type: string }
+        gad_tipo: { type: string, enum: [MUNICIPAL, PROVINCIAL] }
+        provincia: { type: string }
+        ingel: { type: number, format: float }
+        nivel_desempeno: { type: string }
+        semaforo: { type: string, enum: [VERDE, AMARILLO, ROJO] }
+security:
+  - bearerAuth: []

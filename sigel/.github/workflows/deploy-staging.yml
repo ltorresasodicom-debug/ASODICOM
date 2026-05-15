@@ -1,0 +1,25 @@
+name: Deploy — Staging
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-kubectl@v4
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > ~/.kube/config
+      - name: Apply manifests (staging overlay)
+        run: kubectl apply -k sigel/infra/k8s/overlays/staging
+      - name: Wait for rollout
+        run: |
+          kubectl -n sigel-staging rollout status deploy/stg-gateway --timeout=300s
+          kubectl -n sigel-staging rollout status deploy/stg-analytics --timeout=300s
+          kubectl -n sigel-staging rollout status deploy/stg-web --timeout=300s

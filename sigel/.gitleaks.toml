@@ -1,0 +1,25 @@
+# Gitleaks — escaneo de secretos en CI
+title = "SIGEL — gitleaks config"
+
+[allowlist]
+paths = [
+    '''docs/.*\.md''',
+    '''\.env\.example''',
+    '''README\.md''',
+]
+regexes = [
+    '''CHANGE-ME-IN-PRODUCTION''',
+    '''change-me-in-prod''',
+]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api[_-]?key|apikey|secret)['"]?\s*[:=]\s*['"][A-Za-z0-9_\-]{20,}['"]'''
+tags = ["key", "API"]
+
+[[rules]]
+id = "private-key"
+description = "Private Key"
+regex = '''-----BEGIN ((EC|PGP|DSA|RSA|OPENSSH) )?PRIVATE KEY( BLOCK)?-----'''
+tags = ["key", "PRIVATE"]

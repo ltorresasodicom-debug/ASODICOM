@@ -1,0 +1,81 @@
+# =============================================================================
+# CronJobs SIGEL — orquestación de spiders y tareas periódicas
+# =============================================================================
+apiVersion: batch/v1
+kind: CronJob
+metadata: { name: scraper-lotaip, namespace: sigel }
+spec:
+  schedule: "0 2 * * *"   # diario 02:00 UTC
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: scraper
+              image: ghcr.io/sigel-ec/scraper:latest
+              command: ["scrapy", "crawl", "lotaip"]
+              env:
+                - { name: DB_HOST, value: postgres }
+                - name: DB_USER
+                  valueFrom: { secretKeyRef: { name: postgres-secret, key: user } }
+                - name: DB_PASSWORD
+                  valueFrom: { secretKeyRef: { name: postgres-secret, key: password } }
+              resources:
+                requests: { cpu: 200m, memory: 512Mi }
+                limits:   { cpu: 1000m, memory: 2Gi }
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata: { name: scraper-sercop, namespace: sigel }
+spec:
+  schedule: "30 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: scraper
+              image: ghcr.io/sigel-ec/scraper:latest
+              command: ["scrapy", "crawl", "sercop"]
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata: { name: recalcular-scoring, namespace: sigel }
+spec:
+  schedule: "0 4 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: scoring-runner
+              image: curlimages/curl:latest
+              command:
+                - sh
+                - -c
+                - |
+                  curl -fsS -X POST http://analytics:8000/api/v1/scoring/calcular/batch && \
+                  curl -fsS -X POST http://analytics:8000/api/v1/scoring/recalcular-ranking
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata: { name: detectar-anomalias, namespace: sigel }
+spec:
+  schedule: "0 5 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: detector
+              image: curlimages/curl:latest
+              command:
+                - sh
+                - -c
+                - curl -fsS -X POST http://analytics:8000/api/v1/anomalias/detectar

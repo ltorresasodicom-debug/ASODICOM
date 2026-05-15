@@ -1,0 +1,157 @@
+# =============================================================================
+# SIGEL — Stack de desarrollo local (Docker Compose)
+# Levanta: PostgreSQL+PostGIS, Redis, MongoDB, Gateway (NestJS), Analytics
+# (FastAPI), IA (FastAPI), Scraper (Scrapy), Frontend (Next.js), NGINX,
+# Prometheus + Grafana.
+# =============================================================================
+name: sigel
+
+x-common-env: &common-env
+  NODE_ENV: development
+  DB_HOST: postgres
+  DB_PORT: 5432
+  DB_USER: sigel
+  DB_PASSWORD: sigel
+  DB_NAME: sigel
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+
+services:
+  postgres:
+    image: postgis/postgis:15-3.4
+    container_name: sigel-postgres
+    environment:
+      POSTGRES_USER: sigel
+      POSTGRES_PASSWORD: sigel
+      POSTGRES_DB: sigel
+    ports: ["5432:5432"]
+    volumes:
+      - sigel-pg:/var/lib/postgresql/data
+      - ./db/migrations:/docker-entrypoint-initdb.d/01-migrations:ro
+      - ./db/views:/docker-entrypoint-initdb.d/02-views:ro
+      - ./db/functions:/docker-entrypoint-initdb.d/03-functions:ro
+      - ./db/seeds:/docker-entrypoint-initdb.d/04-seeds:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sigel -d sigel"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: sigel-redis
+    ports: ["6379:6379"]
+    volumes: ["sigel-redis:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+
+  mongo:
+    image: mongo:7
+    container_name: sigel-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: sigel
+      MONGO_INITDB_ROOT_PASSWORD: sigel
+      MONGO_INITDB_DATABASE: sigel
+    ports: ["27017:27017"]
+    volumes: ["sigel-mongo:/data/db"]
+
+  gateway:
+    build:
+      context: ./services/gateway
+      dockerfile: ../../infra/docker/Dockerfile.gateway
+    container_name: sigel-gateway
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+    environment:
+      <<: *common-env
+      GATEWAY_PORT: 3000
+      JWT_SECRET: change-me-in-prod
+      ANALYTICS_URL: http://analytics:8000
+      AI_URL: http://ai:8001
+    ports: ["3000:3000"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 15s
+      retries: 5
+
+  analytics:
+    build:
+      context: ./services/analytics
+      dockerfile: ../../infra/docker/Dockerfile.analytics
+    container_name: sigel-analytics
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      <<: *common-env
+      PORT: 8000
+    ports: ["8000:8000"]
+    volumes: ["sigel-models:/data/models"]
+
+  ai:
+    build:
+      context: ./services/ai
+      dockerfile: ../../infra/docker/Dockerfile.ai
+    container_name: sigel-ai
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      <<: *common-env
+      PORT: 8001
+    ports: ["8001:8001"]
+
+  scraper:
+    build:
+      context: ./services/scraper
+      dockerfile: ../../infra/docker/Dockerfile.scraper
+    container_name: sigel-scraper
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment: *common-env
+    # ejecución on-demand: docker compose run scraper scrapy crawl lotaip
+    command: ["tail", "-f", "/dev/null"]
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: ../../infra/docker/Dockerfile.web
+    container_name: sigel-web
+    depends_on: [gateway]
+    environment:
+      NODE_ENV: development
+      GATEWAY_URL: http://gateway:3000
+      NEXT_PUBLIC_API_BASE: http://localhost:3000/api/v1
+    ports: ["4000:4000"]
+
+  nginx:
+    image: nginx:alpine
+    container_name: sigel-nginx
+    depends_on: [gateway, web]
+    ports: ["80:80"]
+    volumes:
+      - ./infra/docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sigel-prometheus
+    ports: ["9090:9090"]
+    volumes:
+      - ./infra/docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: sigel-grafana
+    depends_on: [prometheus]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports: ["3001:3000"]
+    volumes: ["sigel-grafana:/var/lib/grafana"]
+
+volumes:
+  sigel-pg:
+  sigel-redis:
+  sigel-mongo:
+  sigel-models:
+  sigel-grafana:

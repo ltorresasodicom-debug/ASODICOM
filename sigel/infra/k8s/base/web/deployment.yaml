@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: web, namespace: sigel }
+spec:
+  replicas: 3
+  selector: { matchLabels: { app: web } }
+  template:
+    metadata: { labels: { app: web } }
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/sigel-ec/web:latest
+          ports: [{ containerPort: 4000 }]
+          env:
+            - { name: GATEWAY_URL, value: http://gateway:3000 }
+            - { name: NEXT_PUBLIC_API_BASE, value: /api/gateway }
+          resources:
+            requests: { cpu: 200m, memory: 512Mi }
+            limits:   { cpu: 1000m, memory: 1Gi }
+          readinessProbe:
+            httpGet: { path: /, port: 4000 }
+            initialDelaySeconds: 10
