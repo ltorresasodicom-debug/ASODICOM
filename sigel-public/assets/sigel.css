@@ -78,13 +78,33 @@
   background: white;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.1s;
+  transition: all 0.15s;
+  min-height: 44px;          /* Touch-target accesible WCAG */
 }
-.likert button:hover { border-color: #1E3A8A; }
+.likert button:hover { border-color: #1E3A8A; transform: translateY(-1px); }
+.likert button:focus-visible {
+  outline: 2px solid #1E3A8A;
+  outline-offset: 2px;
+}
 .likert button.selected {
   background: #1E3A8A;
   color: white;
   border-color: #1E3A8A;
+  box-shadow: 0 2px 4px rgba(30, 58, 138, 0.2);
+}
+
+/* Estados de focus consistentes para accesibilidad */
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible {
+  outline: 2px solid #1E3A8A;
+  outline-offset: 2px;
+}
+
+/* Mejoras mobile */
+@media (max-width: 640px) {
+  .likert button { padding: 0.6rem 0.4rem; font-size: 0.95rem; }
+  .card { padding: 1rem; }
+  #map { height: 460px; }
 }
 
 .bar {

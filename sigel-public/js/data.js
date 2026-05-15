@@ -1,25 +1,48 @@
 // =============================================================================
 // SIGEL — Carga y preparación de datos
 //
-// Datos reales extraídos del Excel oficial:
-// - 23 prefectos de las elecciones seccionales 2023
-// - 218 alcaldes con sus % de votación
-// - 18 asambleístas 2024 con bancada y contacto
+// Datos reales:
+// - 23 prefectos + 218 alcaldes + 18 asambleístas (Excel seccionales 2023-2024)
+// - 224 cantones con geometrías oficiales (shapefile INEC/IGM, reproyectado de
+//   UTM 17S a WGS84, simplificado a ~256KB / 71KB gzipped)
 //
-// Los scores INGEL son sintéticos por ahora (calculados a partir del % de
-// votación y heurísticas de demostración). En producción, se alimentarían
-// con datos reales del scraper LOTAIP, SERCOP y Ministerio de Finanzas.
+// Los scores INGEL son sintéticos (derivados del % de votación) para fines de
+// demostración. En producción se alimentan del scraper LOTAIP, SERCOP, etc.
 // =============================================================================
 import { calcularIngel, calcularIri, clasificarNivel, semaforizar, DIMENSIONES } from './ingel.js';
+import { normalize } from './utils/normalize.js';
+import { resolveCantonName } from './utils/canton-aliases.js';
 
 let _data = null;
+let _geojson = null;
 
+/**
+ * Carga combinada de los datasets. Idempotente: se ejecuta una sola vez y
+ * cachea el resultado en memoria. El GeoJSON se carga en paralelo con el
+ * Excel-data para reducir TTFB.
+ */
 export async function loadData() {
   if (_data) return _data;
-  const res = await fetch('./data/electoral.json');
-  const raw = await res.json();
+  const [raw, geo] = await Promise.all([
+    fetch('./data/electoral.json').then(r => r.json()),
+    fetch('./data/cantones-ec.geojson')
+      .then(r => r.json())
+      .catch(err => {
+        console.warn('GeoJSON no disponible — mapa usará marcadores simples', err);
+        return null;
+      }),
+  ]);
+  _geojson = geo;
   _data = enrichWithSyntheticScores(raw);
+  attachGeoToGads(_data, geo);
   return _data;
+}
+
+/**
+ * Retorna el FeatureCollection de cantones (puede ser null si falló la carga).
+ */
+export function getCantonesGeoJSON() {
+  return _geojson;
 }
 
 // Coordenadas aproximadas (capital de cada provincia) para Leaflet
@@ -183,6 +206,82 @@ function stddev(arr) {
   return Math.sqrt(avg(arr.map(x => (x - m) ** 2)));
 }
 function round(v, dec = 2) { return Math.round(v * 10 ** dec) / 10 ** dec; }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Asociación GAD ↔ feature GeoJSON
+//
+// El shapefile usa nombres con tildes y mayúsculas distintas a los del Excel
+// (e.g. "GUARANDA" vs "Guaranda"; "SANTO DOMINGO DE LOS TSACHILAS" vs
+// "Santo Domingo de los Tsachilas"). Se hace match por nombre normalizado
+// (provincia + cantón) que elimina tildes, mayúsculas y espacios extras.
+// ─────────────────────────────────────────────────────────────────────────────
+function attachGeoToGads(data, geo) {
+  if (!geo || !geo.features) return;
+
+  // Índice: clave "<provincia>|<canton>" normalizada → feature
+  const featureIndex = new Map();
+  for (const f of geo.features) {
+    const key = `${normalize(f.properties.provincia)}|${normalize(f.properties.canton)}`;
+    featureIndex.set(key, f);
+    // Índice secundario por solo canton (último recurso si la provincia
+    // difiere por estructura de DPA)
+    const cantonKey = normalize(f.properties.canton);
+    if (!featureIndex.has(cantonKey)) featureIndex.set(cantonKey, f);
+  }
+
+  let matched = 0;
+  for (const g of data.cantones) {
+    const resolved = resolveCantonName(g.canton);
+    const keyA = `${normalize(g.provincia)}|${resolved}`;
+    const keyB = resolved;
+    const feat = featureIndex.get(keyA) || featureIndex.get(keyB);
+    if (feat) {
+      g.feature_id = feat.properties.canton_codigo;
+      // Centroide aproximado (promedio bbox de la geometría)
+      const c = featureCentroid(feat.geometry);
+      if (c) g.coord = c;
+      matched++;
+    }
+  }
+
+  // Prefecturas: usan centroide de su provincia (promedio de todos sus cantones)
+  for (const p of data.provincias) {
+    const provFeatures = geo.features.filter(
+      f => normalize(f.properties.provincia) === normalize(p.provincia)
+    );
+    if (provFeatures.length) {
+      const centroids = provFeatures.map(f => featureCentroid(f.geometry)).filter(Boolean);
+      if (centroids.length) {
+        p.coord = [
+          centroids.reduce((a, c) => a + c[0], 0) / centroids.length,
+          centroids.reduce((a, c) => a + c[1], 0) / centroids.length,
+        ];
+      }
+    }
+  }
+
+  console.log(`GeoJSON joined: ${matched}/${data.cantones.length} cantones con geometría`);
+}
+
+/** Centroide aproximado (bbox-center) — suficiente para popups y zoom. */
+function featureCentroid(geom) {
+  if (!geom || !geom.coordinates) return null;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  const visit = (c) => {
+    if (typeof c[0] === 'number') {
+      if (c[0] < minX) minX = c[0];
+      if (c[1] < minY) minY = c[1];
+      if (c[0] > maxX) maxX = c[0];
+      if (c[1] > maxY) maxY = c[1];
+    } else {
+      c.forEach(visit);
+    }
+  };
+  visit(geom.coordinates);
+  if (!isFinite(minX)) return null;
+  // Devuelve [lat, lng] (formato Leaflet)
+  return [(minY + maxY) / 2, (minX + maxX) / 2];
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Almacenamiento de evaluaciones ciudadanas en localStorage
