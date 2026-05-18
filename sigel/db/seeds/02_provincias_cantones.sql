@@ -4,31 +4,31 @@
 SET search_path TO sigel, public;
 
 -- Provincias
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('AZU', 'Azuay', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Cuenca', ST_SetSRID(ST_MakePoint(-78.95, -2.9), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('BOL', 'Bolivar', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Guaranda', ST_SetSRID(ST_MakePoint(-79.0, -1.6), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('CAR', 'Carchi', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Tulcán', ST_SetSRID(ST_MakePoint(-77.72, 0.81), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('CAÑ', 'Cañar', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Azogues', ST_SetSRID(ST_MakePoint(-78.95, -2.7), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('CHI', 'Chimborazo', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Riobamba', ST_SetSRID(ST_MakePoint(-78.65, -1.66), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('COT', 'Cotopaxi', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Latacunga', ST_SetSRID(ST_MakePoint(-78.62, -0.93), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('EL ', 'El Oro', (SELECT id FROM regiones WHERE codigo='COSTA'), 'Machala', ST_SetSRID(ST_MakePoint(-79.96, -3.27), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('ESM', 'Esmeraldas', (SELECT id FROM regiones WHERE codigo='COSTA'), 'Esmeraldas', ST_SetSRID(ST_MakePoint(-79.65, 0.96), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('GAL', 'Galapagos', (SELECT id FROM regiones WHERE codigo='INSULAR'), 'Puerto Baquerizo Moreno', ST_SetSRID(ST_MakePoint(-90.95, -0.9), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('GUA', 'Guayas', (SELECT id FROM regiones WHERE codigo='COSTA'), 'Guayaquil', ST_SetSRID(ST_MakePoint(-79.88, -2.19), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('IMB', 'Imbabura', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Ibarra', ST_SetSRID(ST_MakePoint(-78.13, 0.35), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('LOJ', 'Loja', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Loja', ST_SetSRID(ST_MakePoint(-79.2, -3.99), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('LOS', 'Los Rios', (SELECT id FROM regiones WHERE codigo='COSTA'), 'Babahoyo', ST_SetSRID(ST_MakePoint(-79.5, -1.5), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('MAN', 'Manabi', (SELECT id FROM regiones WHERE codigo='COSTA'), 'Portoviejo', ST_SetSRID(ST_MakePoint(-80.45, -1.05), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('MOR', 'Morona Santiago', (SELECT id FROM regiones WHERE codigo='AMAZONIA'), 'Macas', ST_SetSRID(ST_MakePoint(-78.12, -2.31), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('NAP', 'Napo', (SELECT id FROM regiones WHERE codigo='AMAZONIA'), 'Tena', ST_SetSRID(ST_MakePoint(-77.81, -0.92), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('ORE', 'Orellana', (SELECT id FROM regiones WHERE codigo='AMAZONIA'), 'Francisco de Orellana', ST_SetSRID(ST_MakePoint(-76.99, -0.46), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('PAS', 'Pastaza', (SELECT id FROM regiones WHERE codigo='AMAZONIA'), 'Puyo', ST_SetSRID(ST_MakePoint(-77.99, -1.49), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('PIC', 'Pichincha', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Quito', ST_SetSRID(ST_MakePoint(-78.51, -0.22), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('SAN', 'Santa Elena', (SELECT id FROM regiones WHERE codigo='COSTA'), 'Santa Elena', ST_SetSRID(ST_MakePoint(-80.86, -2.23), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('SAN', 'Santo Domingo de los Tsachilas', (SELECT id FROM regiones WHERE codigo='COSTA'), 'Santo Domingo', ST_SetSRID(ST_MakePoint(-79.17, -0.25), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('STO', 'Sto Dgo De los Tsachilas', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Sto Dgo De los Tsachilas', ST_SetSRID(ST_MakePoint(-78.0, -1.0), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('SUC', 'Sucumbios', (SELECT id FROM regiones WHERE codigo='AMAZONIA'), 'Nueva Loja', ST_SetSRID(ST_MakePoint(-76.88, 0.08), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('TUN', 'Tungurahua', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Ambato', ST_SetSRID(ST_MakePoint(-78.62, -1.25), 4326));
-INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('ZAM', 'Zamora Chinchipe', (SELECT id FROM regiones WHERE codigo='AMAZONIA'), 'Zamora', ST_SetSRID(ST_MakePoint(-78.95, -4.07), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('01', 'Azuay', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Cuenca', ST_SetSRID(ST_MakePoint(-78.95, -2.9), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('02', 'Bolivar', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Guaranda', ST_SetSRID(ST_MakePoint(-79.0, -1.6), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('04', 'Carchi', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Tulcán', ST_SetSRID(ST_MakePoint(-77.72, 0.81), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('03', 'Cañar', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Azogues', ST_SetSRID(ST_MakePoint(-78.95, -2.7), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('06', 'Chimborazo', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Riobamba', ST_SetSRID(ST_MakePoint(-78.65, -1.66), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('05', 'Cotopaxi', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Latacunga', ST_SetSRID(ST_MakePoint(-78.62, -0.93), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('07', 'El Oro', (SELECT id FROM regiones WHERE codigo='COSTA'), 'Machala', ST_SetSRID(ST_MakePoint(-79.96, -3.27), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('08', 'Esmeraldas', (SELECT id FROM regiones WHERE codigo='COSTA'), 'Esmeraldas', ST_SetSRID(ST_MakePoint(-79.65, 0.96), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('20', 'Galapagos', (SELECT id FROM regiones WHERE codigo='INSULAR'), 'Puerto Baquerizo Moreno', ST_SetSRID(ST_MakePoint(-90.95, -0.9), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('09', 'Guayas', (SELECT id FROM regiones WHERE codigo='COSTA'), 'Guayaquil', ST_SetSRID(ST_MakePoint(-79.88, -2.19), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('10', 'Imbabura', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Ibarra', ST_SetSRID(ST_MakePoint(-78.13, 0.35), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('11', 'Loja', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Loja', ST_SetSRID(ST_MakePoint(-79.2, -3.99), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('12', 'Los Rios', (SELECT id FROM regiones WHERE codigo='COSTA'), 'Babahoyo', ST_SetSRID(ST_MakePoint(-79.5, -1.5), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('13', 'Manabi', (SELECT id FROM regiones WHERE codigo='COSTA'), 'Portoviejo', ST_SetSRID(ST_MakePoint(-80.45, -1.05), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('14', 'Morona Santiago', (SELECT id FROM regiones WHERE codigo='AMAZONIA'), 'Macas', ST_SetSRID(ST_MakePoint(-78.12, -2.31), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('15', 'Napo', (SELECT id FROM regiones WHERE codigo='AMAZONIA'), 'Tena', ST_SetSRID(ST_MakePoint(-77.81, -0.92), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('22', 'Orellana', (SELECT id FROM regiones WHERE codigo='AMAZONIA'), 'Francisco de Orellana', ST_SetSRID(ST_MakePoint(-76.99, -0.46), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('16', 'Pastaza', (SELECT id FROM regiones WHERE codigo='AMAZONIA'), 'Puyo', ST_SetSRID(ST_MakePoint(-77.99, -1.49), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('17', 'Pichincha', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Quito', ST_SetSRID(ST_MakePoint(-78.51, -0.22), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('24', 'Santa Elena', (SELECT id FROM regiones WHERE codigo='COSTA'), 'Santa Elena', ST_SetSRID(ST_MakePoint(-80.86, -2.23), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('23', 'Santo Domingo de los Tsachilas', (SELECT id FROM regiones WHERE codigo='COSTA'), 'Santo Domingo', ST_SetSRID(ST_MakePoint(-79.17, -0.25), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('232', 'Sto Dgo De los Tsachilas', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Sto Dgo De los Tsachilas', ST_SetSRID(ST_MakePoint(-78.0, -1.0), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('21', 'Sucumbios', (SELECT id FROM regiones WHERE codigo='AMAZONIA'), 'Nueva Loja', ST_SetSRID(ST_MakePoint(-76.88, 0.08), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('18', 'Tungurahua', (SELECT id FROM regiones WHERE codigo='SIERRA'), 'Ambato', ST_SetSRID(ST_MakePoint(-78.62, -1.25), 4326));
+INSERT INTO provincias (codigo_ine, nombre, region_id, capital, centroide) VALUES ('19', 'Zamora Chinchipe', (SELECT id FROM regiones WHERE codigo='AMAZONIA'), 'Zamora', ST_SetSRID(ST_MakePoint(-78.95, -4.07), 4326));
 
 -- GADs provinciales (Prefecturas)
 INSERT INTO gads (tipo, nombre, provincia_id) VALUES ('PROVINCIAL', 'Gobierno Provincial de Azuay', (SELECT id FROM provincias WHERE nombre='Azuay'));
