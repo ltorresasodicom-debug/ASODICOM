@@ -1,0 +1,53 @@
+# =============================================================================
+# SIGEL — Publicación gratuita en GitHub Pages
+# =============================================================================
+# Publica el sitio estático `sigel-public/` (sin build) en GitHub Pages.
+# URL resultante: https://ltorresasodicom-debug.github.io/ASODICOM/
+#
+# Activación (una sola vez, en el repo de GitHub):
+#   Settings → Pages → Build and deployment → Source: "GitHub Actions"
+#
+# A partir de ahí, cada push a la rama configurada redespliega solo.
+# =============================================================================
+name: Deploy SIGEL a GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - claude/govtech-si-platform-baDHw
+    paths:
+      - 'sigel-public/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:        # permite lanzarlo manualmente desde la pestaña Actions
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Pages
+        uses: actions/configure-pages@v5
+
+      - name: Subir artefacto (solo sigel-public/)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: sigel-public
+
+      - name: Desplegar a GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
