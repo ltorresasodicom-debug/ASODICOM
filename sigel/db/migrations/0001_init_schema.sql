@@ -15,6 +15,16 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE SCHEMA IF NOT EXISTS sigel;
 SET search_path TO sigel, public;
 
+-- Wrapper IMMUTABLE de unaccent(): la función unaccent() del contrib es
+-- STABLE (depende del diccionario), por lo que no puede usarse directamente
+-- en columnas GENERATED ni en índices de expresión. Este wrapper la fija
+-- al diccionario 'unaccent' y la marca IMMUTABLE de forma segura porque el
+-- diccionario es estático en runtime.
+CREATE OR REPLACE FUNCTION sigel.immutable_unaccent(text)
+RETURNS text
+LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT
+AS $$ SELECT public.unaccent('public.unaccent'::regdictionary, $1) $$;
+
 -- =============================================================================
 -- 1. ENTIDADES TERRITORIALES
 -- =============================================================================
@@ -34,7 +44,7 @@ CREATE TABLE provincias (
     uuid            UUID UNIQUE NOT NULL DEFAULT uuid_generate_v4(),
     codigo_ine      VARCHAR(10) UNIQUE,
     nombre          VARCHAR(100) NOT NULL,
-    nombre_norm     VARCHAR(100) GENERATED ALWAYS AS (unaccent(lower(nombre))) STORED,
+    nombre_norm     VARCHAR(100) GENERATED ALWAYS AS (sigel.immutable_unaccent(lower(nombre))) STORED,
     region_id       BIGINT REFERENCES regiones(id),
     poblacion       INT,
     superficie_km2  NUMERIC(12, 2),
@@ -54,7 +64,7 @@ CREATE TABLE cantones (
     provincia_id    BIGINT NOT NULL REFERENCES provincias(id) ON DELETE RESTRICT,
     codigo_ine      VARCHAR(10) UNIQUE,
     nombre          VARCHAR(120) NOT NULL,
-    nombre_norm     VARCHAR(120) GENERATED ALWAYS AS (unaccent(lower(nombre))) STORED,
+    nombre_norm     VARCHAR(120) GENERATED ALWAYS AS (sigel.immutable_unaccent(lower(nombre))) STORED,
     poblacion       INT,
     superficie_km2  NUMERIC(12, 2),
     densidad        NUMERIC(10, 2),
@@ -81,7 +91,7 @@ CREATE TABLE gads (
     uuid            UUID UNIQUE NOT NULL DEFAULT uuid_generate_v4(),
     tipo            VARCHAR(20) NOT NULL CHECK (tipo IN ('MUNICIPAL','PROVINCIAL','PARROQUIAL')),
     nombre          VARCHAR(200) NOT NULL,
-    nombre_norm     VARCHAR(200) GENERATED ALWAYS AS (unaccent(lower(nombre))) STORED,
+    nombre_norm     VARCHAR(200) GENERATED ALWAYS AS (sigel.immutable_unaccent(lower(nombre))) STORED,
     provincia_id    BIGINT REFERENCES provincias(id),
     canton_id       BIGINT REFERENCES cantones(id),
     sitio_web       TEXT,
@@ -114,7 +124,7 @@ CREATE TABLE partidos_politicos (
     id              BIGSERIAL PRIMARY KEY,
     nombre          VARCHAR(200) NOT NULL,
     nombre_corto    VARCHAR(50),
-    nombre_norm     VARCHAR(200) GENERATED ALWAYS AS (unaccent(lower(nombre))) STORED,
+    nombre_norm     VARCHAR(200) GENERATED ALWAYS AS (sigel.immutable_unaccent(lower(nombre))) STORED,
     color_hex       VARCHAR(7),
     ideologia       VARCHAR(100),
     fundacion       DATE,
@@ -127,7 +137,7 @@ CREATE TABLE autoridades (
     id                  BIGSERIAL PRIMARY KEY,
     uuid                UUID UNIQUE NOT NULL DEFAULT uuid_generate_v4(),
     nombre_completo     VARCHAR(255) NOT NULL,
-    nombre_norm         VARCHAR(255) GENERATED ALWAYS AS (unaccent(lower(nombre_completo))) STORED,
+    nombre_norm         VARCHAR(255) GENERATED ALWAYS AS (sigel.immutable_unaccent(lower(nombre_completo))) STORED,
     cargo               VARCHAR(50) NOT NULL CHECK (cargo IN ('ALCALDE','PREFECTO','VICEALCALDE','VICEPREFECTO','CONCEJAL','ASAMBLEISTA')),
     gad_id              BIGINT REFERENCES gads(id),
     provincia_id        BIGINT REFERENCES provincias(id),
