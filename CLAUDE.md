@@ -12,7 +12,7 @@ This repo contains **two separate SIGEL deliverables** plus a legacy file. Know 
 | `sigel/` | Enterprise microservices scaffold (NestJS + FastAPI + Scrapy + Next.js + PostgreSQL/PostGIS + K8s). Reference architecture; not deployed. | Per-service builds |
 | `README.md` (root) | Legacy ASODICOM static HTML, 97 KB. **Unrelated to SIGEL** — do not treat as project docs. |
 
-Working branch: `claude/govtech-si-platform-baDHw`. Commits use the Spanish, multi-paragraph style already in `git log`.
+Working branch: `claude/govtech-si-platform-baDHw` (ya mergeado a `main`; ambas ramas contienen el estado actual). Commits usan el estilo español multi-párrafo del `git log`.
 
 ## The INGEL formula is duplicated by design — keep in sync
 
@@ -34,6 +34,12 @@ Canonical model: `INGEL = Σ(dimensión × ponderación)` over 8 dimensions (wei
 
 Scores in `sigel-public` are **synthetic** (deterministic from vote %); only citizen evaluations use the real INGEL formula. This is intentional for the demo — see `js/data.js` comments.
 
+**Deploy — dos targets activos:**
+- **Netlify:** `sigel-ecuador.netlify.app` (drop manual del directorio como ZIP en el panel del proyecto).
+- **GitHub Pages:** `ltorresasodicom-debug.github.io/ASODICOM` vía `.github/workflows/pages.yml` (auto-redespliega en push a `main` o a la rama de trabajo). Requiere habilitar una vez en **Settings → Pages → Source: GitHub Actions**.
+
+El sitio usa rutas relativas (`./js/…`, `./data/…`) y router por hash, por eso funciona sin cambios bajo el subpath de project-pages.
+
 ## Common commands
 
 ### sigel-public (validate before every deploy)
@@ -43,7 +49,7 @@ node --check js/**/*.js                       # syntax-check all modules (no bui
 python3 -m http.server 8765                   # serve locally → http://localhost:8765
 # Regenerate the cantón GeoJSON from the shapefile: see js/data.js header comment
 ```
-There is no test runner here; validation is `node --check` on every JS module + manual smoke test. Deploy = drop the directory as a ZIP on Netlify, or via local Netlify MCP (sandbox deploys are blocked with 403 "Host not in allowlist").
+Validación pre-deploy: `node --check` por cada módulo + el motor de scoring (`js/ingel.js`) tiene 20 sanity tests que replican los 49 pytest del backend Python (ejecutables directamente con `node --input-type=module` importando `./js/ingel.js`). Deploy = drop del directorio como ZIP en el panel Netlify, push a `main`/rama de trabajo para GitHub Pages, o Netlify MCP desde local (los deploys desde sandbox se bloquean con 403 "Host not in allowlist").
 
 ### sigel/services/analytics (Python, authoritative scoring)
 ```bash
@@ -59,7 +65,7 @@ ruff check . && black .
 ```bash
 cd sigel/services/gateway
 pnpm install && pnpm build
-pnpm test                                     # jest; pnpm test -- <file> for one
+pnpm test                                     # jest; para un solo archivo: pnpm jest <archivo.spec.ts>
 pnpm lint
 ```
 
@@ -70,4 +76,21 @@ pnpm lint
 
 ## Database
 
-PostgreSQL 15 + PostGIS, schema `sigel`. Apply order matters: `0001_init_schema.sql` (25 tables, `mediciones` partitioned by year) → `0002_analytical_views.sql` → `0003_scoring_functions.sql` → seeds. Seeds are generated from the uploaded Excel via Python scripts; the SQL is committed, the generators are not — regenerate from the source spreadsheet if electoral data changes.
+PostgreSQL 15 + PostGIS, schema `sigel`. Orden de aplicación estricto:
+`db/migrations/0001_init_schema.sql` (25 tablas, `mediciones` particionada por año) →
+`db/views/0002_analytical_views.sql` →
+`db/functions/0003_scoring_functions.sql` →
+`db/seeds/01..06`.
+
+Los seeds se generan desde el Excel original vía scripts Python; el SQL está commiteado, los generadores no — regenera desde el spreadsheet si los datos electorales cambian.
+
+**Reglas duras aprendidas por bugs reales que bloquearon deploys:**
+
+- `unaccent()` del contrib es **STABLE**, no IMMUTABLE. No puede usarse directamente en `GENERATED ALWAYS AS (...)` ni en índices de expresión. El schema define `sigel.immutable_unaccent()` como wrapper IMMUTABLE (fija el diccionario `public.unaccent`). Cualquier columna generada con normalización de texto **debe** usar este wrapper.
+- `provincias.codigo_ine` debe usar el **código DPA oficial de 2 dígitos** del shapefile INEC (disponible en `sigel-public/data/cantones-ec.geojson` como `provincia_codigo`). El generador anterior usaba `prov[:3].upper()`, que produce duplicados ("SAN" para Santa Elena y Santo Domingo → unique violation).
+- **`db/seeds/06_mediciones_demo.sql` es el que hace computable el INGEL:** genera 11.664 mediciones deterministas (243 GAD × 16 indicadores × 3 años) y recalcula `scoring` en SQL puro con las mismas ponderaciones que Python/JS. Sin este seed, la tabla `mediciones` queda vacía y el motor produce INGEL nulo. En producción lo reemplaza el ETL/scraper; en dev/demo es el que llena rankings, evolución histórica y estadísticas.
+
+## Gotchas del repo
+
+- **`.gitignore` con reglas amplias:** el patrón Python `lib/` sin ancla silenciosamente ignoraba `sigel/apps/web/src/lib/` — `api.ts` (cliente HTTP de todo el frontend) nunca se commiteaba y cualquier `pnpm build` fallaba con "Cannot find module '@/lib/api'". Las reglas de build de un servicio deben anclarse con `/` inicial (p.ej. `/lib/`, `**/site-packages/lib/`). Antes de commitear, verifica con `git check-ignore <ruta>` cualquier regla que use nombres genéricos de directorio.
+- **Workflows Pages colisionantes:** GitHub añade `nextjs.yml` automáticamente al habilitar Pages en un repo con Next.js detectado (aunque el Next.js real esté en `sigel/apps/web/` y no sea lo que se despliega). Comparte `concurrency: pages` con `pages.yml` y provoca race. El workflow oficial es `.github/workflows/pages.yml` (raíz, publica solo `sigel-public/`); si aparece `nextjs.yml`, bórralo.
