@@ -42,6 +42,11 @@ jobs:
 
       - name: Configurar Pages
         uses: actions/configure-pages@v5
+        with:
+          # enablement:true habilita Pages en el repo automáticamente si aún
+          # no lo está — evita el error "Get Pages site failed. Not Found"
+          # y elimina el paso manual en Settings → Pages.
+          enablement: true
 
       - name: Subir artefacto (solo sigel-public/)
         uses: actions/upload-pages-artifact@v3
